@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+
+ <head>
+    <meta charset="utf-8">
+	<link rel="stylesheet" type="text/css" href="/css/mystyle.css">
+
+    <title>Keen.io Test</title>
+
+
+	<!-- Keen.io script -->
+	<script type="text/javascript">
+	  !function(a,b){if(void 0===b[a]){b["_"+a]={},b[a]=function(c){b["_"+a].clients=b["_"+a].clients||{},b["_"+a].clients[c.projectId]=this,this._config=c},b[a].ready=function(c){b["_"+a].ready=b["_"+a].ready||[],b["_"+a].ready.push(c)};for(var c=["addEvent","setGlobalProperties","trackExternalLink","on"],d=0;d<c.length;d++){var e=c[d],f=function(a){return function(){return this["_"+a]=this["_"+a]||[],this["_"+a].push(arguments),this}};b[a].prototype[e]=f(e)}var g=document.createElement("script");g.type="text/javascript",g.async=!0,g.src="https://d26b395fwzu5fz.cloudfront.net/3.0.9/keen.min.js";var h=document.getElementsByTagName("script")[0];h.parentNode.insertBefore(g,h)}}("Keen",this);
+	</script>	
+
+	<!-- Keen JS client Config -->
+	<script type="text/javascript">
+	  client = new Keen({
+	    projectId: "5440077f24819630c1eac99f",       // String (required)
+	    writeKey: "243faf0d8e2bd66727b7a6cab30babfc27f765491b7417e99fd46fc7f9ae9f10643907d374d69cfd4cb93c4833fb6eeccf4ed9bdc5edc88cc86d901d1a674eb3ad5b3132e63752f681cbe6135586e183877978742b1547bcb1f889ca04dac16af32478cbd29f2f96d0276536e9d82a30", // String (required for sending data)
+	    readKey: "5043599ce4e397338706e9ba527839d33512baec284644502d4b5939844b7bfe3c083bea39f87ae7937618771dbc224f487333bdbdd5b0e4a3b9189f76bfdb6dbc6a2dbf15447e7d7f48db0e59c90038205aa75187122a5adc8893fe90f4573d1bd74aa437f1486d2c90c47d3a2bae9b",   // String (required for querying data)
+	    protocol: "https",                  // String (optional: https | http | auto)
+	    host: "api.keen.io/3.0",            // String (optional)
+	    requestType: "jsonp"                // String (optional: jsonp, xhr, beacon)
+	  });
+	</script>
+
+	<!-- Event Wrapper for lessons -->
+	<script type="text/javascript">
+		
+
+		//Finished Lessons
+		var finished = { touch: false, smell: false, vision: false, hearing: false, taste: false };
+
+
+		//Hard coding fiveSenses question 5E totals:
+		var touchFiveE = { engage: true, explore: false, explain: false, elaborate: false, evaluate: false };
+		var smellFiveE = { engage: true, explore: true, explain: false, elaborate: false, evaluate: false };
+		var visionFiveE = { engage: true, explore: true, explain: true, elaborate: false, evaluate: false };
+		var hearingFiveE = { engage: true, explore: true, explain: true, elaborate: true, evaluate: false };
+		var tasteFiveE = { engage: false, explore: false, explain: false, elaborate: false, evaluate: false };
+
+		// init variables (can be set dynamically on page)
+		var userID = "Anon"; 
+		var firstName = "User"+userID;
+		var email = firstName+"@example.com";
+		
+		// starting values for clarification
+		var section = "5senses"; 
+		var lesson = "touch";
+		var part = 1;
+		var partType = "question";
+
+		// Any question can be found by knowing it's section, lesson and Q#
+		var partID = section+"_"+lesson+"_"+part;
+
+		//onclick="eventWrapper('5senses_touch', true, touchQuestion1);"
+
+		function eventWrapper(question_name, isCorrect, lessonType ) {
+			
+			//Default for all question types is "question"
+			lessonType = typeof lessonType !== 'undefined' ? lessonType : "question";
+
+			//get section name from question_name
+			section = question_name.split("_")[0];
+
+			//get name of lesson
+			lesson = question_name.split("_")[1];			
+
+			//get question # from document
+			part = document.getElementById(lesson+"_question").value;
+
+			//create partID 
+			partID = section+"_"+lesson+"_"+part;
+
+			// If this is the first time it's correct send event data
+			if ( finished[lesson]!== 1 ) {								
+
+				//set lesson to finished if correct
+				if (isCorrect) { finished[lesson] = 1; };
+
+				alert("Part: "+partID+ " UserID: "+userID +" correct: "+isCorrect);
+
+				//generate answer event to send
+				var answer = {
+					section: section,
+					lesson: lesson,
+					part: part,
+					partID: partID,
+					partType: partType,
+					correct: isCorrect,
+					userID: userID,
+					email: email,
+					firstName: firstName,
+					referrer: document.referrer,
+					"keen" : {
+						"timestamp": new Date().toISOString()
+					},
+				};
+
+				console.log(answer);
+
+				// send it to the "answers" collection
+				client.addEvent("answers", answer);
+			}
+
+			// makeQuery(1, "answers", "property", "this_7_days");
+			progress(partID, userID);
+			
+
+
+		};
+
+		// wrapper for keen querry with string prettifying
+		function makeQuery(latest, collection, group, time) {
+
+			var count = new Keen.Query("extraction", {
+			  eventCollection: collection,
+			  latest: latest,
+			  groupBy: group,
+			  timeframe: time
+			});
+
+			// Send query
+			client.run(count, function(response) {
+				// response.result
+				console.log(response);
+				var jsonStr = JSON.stringify(response);
+				regeStr = '', // A EMPTY STRING TO EVENTUALLY HOLD THE FORMATTED STRINGIFIED OBJECT
+				f = {
+				        brace: 0
+				    }; // AN OBJECT FOR TRACKING INCREMENTS/DECREMENTS,
+				       // IN PARTICULAR CURLY BRACES (OTHER PROPERTIES COULD BE ADDED)
+
+				regeStr = jsonStr.replace(/({|}[,]*|[^{}:]+:[^{}:,]*[,{]*)/g, function (m, p1) {
+				var rtnFn = function() {
+				        return '<div style="text-indent: ' + (f['brace'] * 20) + 'px;">' + p1 + '</div>';
+				    },
+				    rtnStr = 0;
+				    if (p1.lastIndexOf('{') === (p1.length - 1)) {
+				        rtnStr = rtnFn();
+				        f['brace'] += 1;
+				    } else if (p1.indexOf('}') === 0) {
+				         f['brace'] -= 1;
+				        rtnStr = rtnFn();
+				    } else {
+				        rtnStr = rtnFn();
+				    }
+				    return rtnStr;
+				});
+
+				document.getElementById("printHere").innerHTML = regeStr; // appends the result to the body of the HTML document
+
+				client.draw(count, document.getElementById("my_chart"), {
+	    		// Custom configuration here
+	  			});
+
+			});
+		};
+
+		function progress(partID, userID) {
+
+			Keen.ready(function(){
+			  var query = new Keen.Query("count", {
+			    eventCollection: "answers",
+			    groupBy: "correct",
+			    filters: [{"property_name":"partID","operator":"eq","property_value": partID},{"property_name":"userID","operator":"eq","property_value": userID}]
+				});
+			// Send query
+			client.run(query, function(response) {
+				// response.result
+				var jsonStr = JSON.stringify(response);
+				
+				document.getElementById("printHere").innerHTML = jsonStr; // appends the result to the body of the HTML document
+
+				client.draw(query, document.getElementById("my_chart"), {
+	    		// Custom configuration here
+		  		});
+			});
+							
+			});			
+		};
+
+	</script>
+
+	
+
+  </head>
+
+  <body>
+
+
+<h2>Set Server Side Variables</h2>
+
+	<input id="SetUser" type="button" value="Set" onclick='
+		userID = document.getElementById("userID").value;
+		email = "User"+userID+"@example.com";
+		firstName = "User"+userID;
+		lessonID = document.getElementById("lesson").value;
+	'/>
+	UserID<input type="number" id="userID" value="2001" />
+	Section<input type="text" id="lesson" value="5_senses" />
+	Page(Optional)<input type="number" id="pageID" value="1" />
+
+	
+<h2>Query via API<h2>
+
+
+	<input id="singleTrack" type="button" value="lastEvent" onclick=' 
+
+		makeQuery(1, "answers", "property", "this_7_days");
+
+	' />
+
+	
+	<input id="5E" type="button" value="5Es Completness" onclick='
+
+		
+
+	'/>
+
+	<input id="Q" type="button" value="Question Progress" onclick='
+
+		progress(partID, userID);
+
+	'/>
+
+<h2>Event Tracking</h2>
+	<!-- Simple button for MixPanel tracking test -->
+
+
+	<table style="width:100%">
+  	<tr>
+	    <td>Five Senses</td>
+  	</tr>
+  	<tr>
+	    <td>
+	    	<input id="touchTrue" type="button" class="btnCorrect" value="Touch" onclick="eventWrapper('5senses_touch', true);" />
+	    	<input id="touchFalse" class="btnIncorrect" type="button" value="Touch" onclick="eventWrapper('5senses_touch', false);" />	    	
+			Engage<input type="checkbox" id="touch_engage" name="engage" checked/>
+			Explore<input type="checkbox" id="touch_explore" name="explore" />
+			Explain<input type="checkbox" id="touch_explain" name="explain" />
+			Elaborate<input type="checkbox" id="touch_elaborate" name="elaborate" />
+			Evaluate<input type="checkbox" id="touch_evaluate" name="evaluate" />	
+			Question <input type="text" id="touch_question" value="1" />		
+	    </td>
+  	</tr>
+  	<tr>
+	    <td>
+	    	<input id="smellTrue" type="button" class="btnCorrect" value="Smell" onclick="eventWrapper('5senses_smell', true);" />
+	    	<input id="smellFalse" type="button" class="btnIncorrect" value="Smell" onclick="eventWrapper('5senses_smell', false);" />
+	    	Engage<input type="checkbox" id="smell_engage" name="engage" checked/>
+			Explore<input type="checkbox" id="smell_explore" name="explore" checked/>
+			Explain<input type="checkbox" id="smell_explain" name="explain" />
+			Elaborate<input type="checkbox" id="smell_elaborate" name="elaborate" />
+			Evaluate<input type="checkbox" id="smell_evaluate" name="evaluate" />
+			Question <input type="text" id="smell_question" value="1" />
+	    </td>
+  	</tr>
+  	  	<tr>
+	    <td>
+	    	<input id="visionTrue" type="button" class="btnCorrect" value="Vision" onclick="eventWrapper('5senses_vision', true);" />
+	    	<input id="visionFalse" type="button" class="btnIncorrect" value="Vision" onclick="eventWrapper('5senses_vision', false);" />
+	    	Engage<input type="checkbox" id="vision_engage" name="engage" checked/>
+			Explore<input type="checkbox" id="vision_explore" name="explore" checked/>
+			Explain<input type="checkbox" id="vision_explain" name="explain" checked/>
+			Elaborate<input type="checkbox" id="vision_elaborate" name="elaborate" />
+			Evaluate<input type="checkbox" id="vision_evaluate" name="evaluate" />
+			Question <input type="text" id="vision_question" value="1" />
+	    </td>
+  	</tr>
+  	  	<tr>
+	    <td>
+	    	<input id="hearingTrue" type="button" class="btnCorrect" value="Hearing" onclick="eventWrapper('5senses_hearing', true);" />
+	    	<input id="hearingFalse" type="button" class="btnIncorrect" value="Hearing" onclick="eventWrapper('5senses_hearing', false);" />
+	    	Engage<input type="checkbox" id="hearing_engage" name="engage" checked/>
+			Explore<input type="checkbox" id="hearing_explore" name="explore" checked/>
+			Explain<input type="checkbox" id="hearing_explain" name="explain" checked/>
+			Elaborate<input type="checkbox" id="hearing_elaborate" name="elaborate" checked/>
+			Evaluate<input type="checkbox" id="hearing_evaluate" name="evaluate" checked/>
+			Question <input type="text" id="hearing_question" value="1" />
+	    </td>
+  	</tr>
+  	  	<tr>
+	    <td>
+	    	<input id="tasteTrue" type="button" class="btnCorrect" value="Taste" onclick="eventWrapper('5senses_taste', true);" />
+	    	<input id="tasteFalse" type="button" class="btnIncorrect" value="Taste" onclick="eventWrapper('5senses_taste', false);" />
+	    	Engage<input type="checkbox" id="taste_engage" name="engage" />
+			Explore<input type="checkbox" id="taste_explore" name="explore" />
+			Explain<input type="checkbox" id="taste_explain" name="explain" />
+			Elaborate<input type="checkbox" id="taste_elaborate" name="elaborate" />
+			Evaluate<input type="checkbox" id="taste_evaluate" name="evaluate" />
+			Question <input type="text" id="taste_question" value="1" />
+	    </td>
+  	</tr>
+
+	</table>
+
+
+	<h2>Output<h2>
+
+		
+		<span id="printHere"></span><span id ="my_chart"></span>
+5senses_touch_1
+5Senses_touch_1
+
+  </body>
