@@ -7,3 +7,42 @@ Model Student activity (time spent on lessons by section)
 
 Must have: dont push data once section completed.
 Nice to have student progress
+
+
+User Model:
+
+lesson  = 5 senses or magnets
+page = a given page of the lesson
+pageCompleness = % of page done.
+part = a given part of a page, could be a question, or a video or a sound, can be 1 or many.
+partCompleteness  = answered? listened? Sounds will send 2 events one for start + finish.
+*denotes embedded subdocument.
+
+UserData:
+	userID: 1234,
+	firstName: Piam
+	lastName: Kiarostami
+	userType: Parent
+	children: [child_ID1, child_ID2]
+	email: pkiarostami@gmail.com
+
+	userType: Child
+	parents: [parent_ID1, parent_ID2]
+
+PageData: 
+	5Etotals: [e1:1,e2:2,e3:2,e4:0,e5:4]
+	partIDs: [partID1,partID2]
+	partType: [partID1:question, partID2:sound]
+	part5Etotals [ partID1: [e1:true, e2:true, e3:false, e4:false, e5:false], partID2: [e1:true..],...]
+
+
+UserPageStatus:
+	*5Etotals: [e1:1,e2:2,e3:2,e4:0,e5:4]
+	*partIDs: [partID1,partID2]
+	*partType: [partID1:question, partID2:sound]
+	*part5Etotals [ partID1: [e1:true, e2:true, e3:false, e4:false, e5:false], partID2: [e1:true..],...]
+
+	partComplete: [partID1:fales, partID2:false]
+	pageComplete: fales
+
+	*ChildID: 1234
