@@ -1,11 +1,16 @@
-What question(s) did many students get wrong the most?
-For a given lesson and student how many times did they get it wrong?
+/*
+Think about updating your document eg: add a new user, make a new userpage status+userdata. 
+User changes email, more expensive (but doesn't happen too often)
+
+
+Which questions brought down the average the most (wrong most often, with most impact)
+For a given question and student how many times did they get it wrong?
 What is a given students progress through a lesson (% complete)
 Rank lessons for a student based on errors
 Model Student activity (time spent on lessons by section)
 
 
-Must have: dont push data once section completed.
+Must have: maintain childs lesson state
 Nice to have student progress
 
 
@@ -16,33 +21,76 @@ page = a given page of the lesson
 pageCompleness = % of page done.
 part = a given part of a page, could be a question, or a video or a sound, can be 1 or many.
 partCompleteness  = answered? listened? Sounds will send 2 events one for start + finish.
-*denotes embedded subdocument.
+*/
 
-UserData:
+UserData: {
 	userID: 1234,
-	firstName: Piam
-	lastName: Kiarostami
-	userType: Parent
-	children: [child_ID1, child_ID2]
-	email: pkiarostami@gmail.com
+	name: "Piam Kiarostami",
+	userType: "Parent", 
+	children: ["child_ID1", "child_ID2"],
+	email: "pkiarostami@gmail.com",
 
-	userType: Child
-	parents: [parent_ID1, parent_ID2]
+	userType: "Child",
+	parents: ["parent_ID1", "parent_ID2"]
+}
 
-PageData: 
-	5Etotals: [e1:1,e2:2,e3:2,e4:0,e5:4]
-	partIDs: [partID1,partID2]
-	partType: [partID1:question, partID2:sound]
-	part5Etotals [ partID1: [e1:true, e2:true, e3:false, e4:false, e5:false], partID2: [e1:true..],...]
+PageData: {
+	page_ID: 1,
+	5Etotals: [ e1:2, e2:2, e3:2, e4:0, e5:4 ],
+	parts: [
+				"partID1": {
+					type: "question", 5Ecovered: { "e1": true, "e2": true, "e3": false, "e4": false, "e5": false } },
+				"partID2": {	
+					type: "video", 5Ecovered: { "e1": true, "e2": true, "e3": false, "e4": false, "e5": true } }.
+				"partID3": {...}, ...}		 
+	]
+}
 
+lessonData: {
+	lesson_ID: 1,
+	5Etotals: ["e1": 10, "e2": 5,...],
+	pageData: [ {
+		page_ID: 1
+		5Etotals: [ "e1": 2, "e2": 2, "e3": 2, "e4": 0, "e5": 4]
+		parts: [
+				"partID1": {
+					type: "question", 5Ecovered: { "e1": true, "e2": true, "e3": false, "e4": false, "e5": false } },
+				"partID2": {	
+					type: "video", 5Ecovered: { "e1": true, "e2": true, "e3": false, "e4": false, "e5": true } }.
+				"partID3": {...}, ...}		 
+		] },		
+		{ page_ID: 2, ..... }, ...}] 
+}
 
-UserPageStatus:
-	*5Etotals: [e1:1,e2:2,e3:2,e4:0,e5:4]
-	*partIDs: [partID1,partID2]
-	*partType: [partID1:question, partID2:sound]
-	*part5Etotals [ partID1: [e1:true, e2:true, e3:false, e4:false, e5:false], partID2: [e1:true..],...]
-
-	partComplete: [partID1:fales, partID2:false]
-	pageComplete: fales
-
-	*ChildID: 1234
+userStatus: {
+	lessonData: [ {
+		lesson_ID: 1
+		5Etotals: ["e1": 10, "e2": 5,...],
+		lesson_complete: false, //Augmented
+		pageData: [ {
+			page_ID: 1
+			5Etotals: [ "e1": 2, "e2": 2, "e3": 2, "e4": 0, "e5": 4]
+			parts: [
+					"partID1": {
+						type: "question", 5Ecovered: { "e1": true, "e2": true, "e3": false, "e4": false, "e5": false }, 
+						complete: false, wrongness: 2 //Augmented  
+					},
+					"partID2": {	
+						type: "video", 5Ecovered: { "e1": true, "e2": true, "e3": false, "e4": false, "e5": true },
+						complete: true, percent_watched: 100% //Augmented (perhaps add rich data about wahts watched)
+					},
+					"partID3": {...}, ...}		 
+			] },		
+			{ page_ID: 2, ..... }, ...}] 
+		}, 
+		{ lessson_ID: 2, 5Etotals: [ "e1": 22, "e2": 6, ... ], ...} 
+		... ]
+	
+	{
+		childID: 1234,
+		name: "Piam Kiarostami",
+		email: null,
+		userType: "Child",
+		parents: ["parent_ID1", "parent_ID2"]
+	}
+}
